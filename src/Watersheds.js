@@ -122,8 +122,8 @@
         var basinMap = [];
 
         //Check if the array exists and isn't empty
-        if (typeof elevationMap === 'undefined' && elevationMap.length === 0 &&
-            typeof elevationMap[0] === 'undefined' && elevationMap[0].length === 0) {
+        if (typeof elevationMap === 'undefined' || elevationMap.length === 0 &&
+            typeof elevationMap[0] === 'undefined' || elevationMap[0].length === 0) {
             document.body.innerHTML += "<p>Error</p>";
             return ;
         }
