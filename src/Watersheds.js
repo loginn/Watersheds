@@ -5,9 +5,9 @@
 "use strict"; // Makes writing js more secure by throwing errors when an erroneous declaration is made
 
 /**
- * getBasinMap parses the elevationMap into a basinMap made of basinCell each with a sink_name, elevation, position and whether the node has been visited
+ * getBasinMap parses the elevationMap into a basinMap made of basinCell each with a sink_name, elevation, position and whether the node has been visited or not
  * @param {Array} elevationMap The 2D array passed as an input. getBasinMap iterates over every element
- * @param {Array} basinMap The 2D array to be filled with basinCells
+ * @param {Array} basinMap The 2D array to be filled with rows of basinCells
  */
 
 function getBasinMap(elevationMap, basinMap) {
@@ -35,13 +35,11 @@ function getBasinMap(elevationMap, basinMap) {
  * an updated letter_index if the fount local minimum wasn't already associated with a letter
  * @param {Array} basinMap The 2D array in which basinCell is found. Used to find the lowest neighbouring node
  * @param {Object} basinCell The cell for which we want to find the lowest node
- * @param {Number} letter_index The letter index to use as the name of the sink if it is a local minimum
- * @returns {Number} letter_index The updated letter index
+ * @param {Object} letter_picker Contains the letter index and alphabet to use as the name of the sink if it is a local minimum
  */
 
-function getLowestDrain(basinMap, basinCell, letter_index) {
+function getLowestDrain(basinMap, basinCell, letter_picker) {
     var lowestDrain = basinCell; // Set the lowest nearby node to the current one. If no lower node is found, this is the local minimum
-    var alphabet = "abcdefghijklmnopqrstuvwxyz"; // The alphabet used to pick the letter
 
     // Get the position of the current node
     var x = basinCell.x;
@@ -67,14 +65,13 @@ function getLowestDrain(basinMap, basinCell, letter_index) {
     // Then set the sink_name of the lowest node as the sink_name of the current node
 
     if (lowestDrain !== basinCell && lowestDrain.sink_name !== basinCell.sink_name) {
-        letter_index = getLowestDrain(basinMap, lowestDrain, letter_index);
+        getLowestDrain(basinMap, lowestDrain, letter_picker);
         basinCell.sink_name = lowestDrain.sink_name; // By putting this in the if statement, we avoid an useless operation when we find the sink
     } else if (typeof basinCell.sink_name === 'number') { // Check if the sink_name is a number
-        basinCell.sink_name = alphabet[letter_index]; // if yes, assign a letter to it and update the letter index for the next time we find a local minimum
-        letter_index++;
+        basinCell.sink_name = letter_picker.alphabet[letter_picker.letter_index]; // if it is, assign a letter to it and update the letter_index for the next time we find a local minimum
+        letter_picker.letter_index++;
     }
     basinCell.visited = true; // Avoid duplicated work by setting the node as visited
-    return letter_index; // return the letter to make sure it is incremented
 }
 
 /**
@@ -83,12 +80,18 @@ function getLowestDrain(basinMap, basinCell, letter_index) {
  */
 
 function flowDown(basinMap) {
-    var letter_index = 0;
+    // By using this object, we avoid instantiating the alphabet string at each call of the getLowestDrain function and pass a copy of a reference to getLowestDrain
+    // The recursive function doesn't return a variable anymore
+    var letter_picker = {
+        alphabet: "abcdefghijklmnopqrstuvwxyz",
+        letter_index : 0
+    };
 
     for (var i = 0 ; i < basinMap.length ;  i++) {
         for (var j = 0 ; j < basinMap[i].length ; j++) {
             if (!basinMap[i][j].visited) { // Has the node been visited
-                letter_index = getLowestDrain(basinMap, basinMap[i][j], letter_index); // If not get its lowest point and change the letter to set the lowest point if needed
+                // If not get its lowest point and change the letter_picker to the updated one
+                 getLowestDrain(basinMap, basinMap[i][j], letter_picker);
             }
         }
     }
@@ -137,12 +140,13 @@ function watersheds(elevationMap){
     displayBasinMap(basinMap); // Display the basinMap
 }
 
-/** TESTS these are the ones provided by google plus edge cases */
+/** TESTS ! These are the ones provided by google plus edge cases */
 
 
 (function(){ // We use this function to isolate the main from the global scope
 
     function main() {
+        // Google tests
         var elevationMap =
             [[9, 6, 3],
                 [5, 9, 6],
