@@ -31,11 +31,12 @@ function getBasinMap(elevationMap, basinMap) {
 }
 
 /**
- * getLowestDrain recursively finds the lowest neighbouring node from the current node and sets the sink_name of the current node to that of the lowest node
+ * getLowestDrain recursively finds the lowest neighbouring node from the current node and sets the sink_name of the current node to that of the lowest node and returns
+ * an updated letter_index if the fount local minimum wasn't already associated with a letter
  * @param {Array} basinMap The 2D array in which basinCell is found. Used to find the lowest neighbouring node
  * @param {Object} basinCell The cell for which we want to find the lowest node
  * @param {Number} letter_index The letter index to use as the name of the sink if it is a local minimum
- * @return {Number} letter_index The updated letter index
+ * @returns {Number} letter_index The updated letter index
  */
 
 function getLowestDrain(basinMap, basinCell, letter_index) {
@@ -62,14 +63,14 @@ function getLowestDrain(basinMap, basinCell, letter_index) {
     }
 
     // Where the magic happens ! Call the function recursively if we found a node lower than the current one
-    // and their sink_names are different from each other
+    // and their names are different from one another
     // Then set the sink_name of the lowest node as the sink_name of the current node
 
-    if (lowestDrain !== basinCell) {
+    if (lowestDrain !== basinCell && lowestDrain.sink_name !== basinCell.sink_name) {
         letter_index = getLowestDrain(basinMap, lowestDrain, letter_index);
         basinCell.sink_name = lowestDrain.sink_name; // By putting this in the if statement, we avoid an useless operation when we find the sink
-    } else if (typeof basinCell.sink_name === 'number') {
-        basinCell.sink_name = alphabet[letter_index];
+    } else if (typeof basinCell.sink_name === 'number') { // Check if the sink_name is a number
+        basinCell.sink_name = alphabet[letter_index]; // if yes, assign a letter to it and update the letter index for the next time we find a local minimum
         letter_index++;
     }
     basinCell.visited = true; // Avoid duplicated work by setting the node as visited
